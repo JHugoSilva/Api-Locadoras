@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Marca;
 use Illuminate\Http\Request;
+use App\Repositories\MarcaRepository;
 use Illuminate\Support\Facades\Storage;
 
 class MarcaController extends Controller
@@ -21,13 +22,33 @@ class MarcaController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function index()
+    public function index(Request $request)
     {
-        $marca = $this->marca->get();
-        if ($marca === null) {
+
+        $marcaRepository = new MarcaRepository($this->marca);
+
+        if ($request->has('atributos_modelos') && !empty($request->atributos_modelos)) {
+            $atributos_modelos = 'modelos:id,'.$request->atributos_modelos;
+            $marcaRepository->selectAtributosRegistrosRelacionados($atributos_modelos);
+        } else {
+            $marcaRepository->selectAtributosRegistrosRelacionados('modelos');
+        }
+
+        if ($request->has('atributos') && !empty($request->atributos)) {
+            $marcaRepository->selectAtributos($request->atributos);
+        }
+
+        if ($request->has('filtro') && !empty($request->filtro)) {
+            $marcaRepository->filtro($request->filtro);
+        }
+
+        $marcas = $marcaRepository->get();
+
+        if ($marcas === null) {
             return response()->json(['msg' => 'Marcas não encontradas'], 404);
         }
-        return response()->json($marca, 200);
+
+        return response()->json($marcas, 200);
     }
 
     /**
@@ -38,7 +59,6 @@ class MarcaController extends Controller
      */
     public function store(Request $request)
     {
-
         $request->validate($this->marca->roles(), $this->marca->feedback());
 
         $image = $request->file('imagem');
@@ -60,7 +80,7 @@ class MarcaController extends Controller
      */
     public function show(int $id)
     {
-        $marca = $this->marca->find($id);
+        $marca = $this->marca->with('modelos')->find($id);
         if ($marca === null) {
             return response()->json(['msg' => 'Marca não localizada'], 404);
         }
@@ -70,8 +90,8 @@ class MarcaController extends Controller
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
      * @param  int id
+     * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
     public function update(Request $request, int $id)
@@ -79,7 +99,7 @@ class MarcaController extends Controller
         $marca = $this->marca->find($id);
 
         if ($marca === null) {
-            return response()->json(['msg' => 'Marca não atualzada'], 404);
+            return response()->json(['msg' => 'Marca não atualizada'], 404);
         }
 
         if ($request->method() === 'PATCH') {

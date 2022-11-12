@@ -35,4 +35,9 @@ class Marca extends Model
             'imagem.max' => 'A imagem deve ter no maxímo 8MB (8192 KB)',
         ];
     }
+
+    public function modelos()
+    {
+        return $this->hasMany(Modelo::class);
+    }
 }
