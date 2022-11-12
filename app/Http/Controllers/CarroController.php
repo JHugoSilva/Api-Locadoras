@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Carro;
-use App\Repositories\CarroRepository;
 use Illuminate\Http\Request;
+use App\Repositories\CarroRepository;
 
 class CarroController extends Controller
 {
@@ -75,7 +75,7 @@ class CarroController extends Controller
      */
     public function show(int $id)
     {
-        $carro = $this->carro->with('modelos')->find($id);
+        $carro = $this->carro->with('modelo')->find($id);
         if ($carro === null) {
             return response()->json(['msg' => 'Carro não localizada'], 404);
         }
